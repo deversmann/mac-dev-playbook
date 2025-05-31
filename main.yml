@@ -15,11 +15,15 @@
       - WindowsApp
       - Zoom.us
 
-
   tasks:
-    # - name: Configure passwordless sudo.
-    #   debug:
-    #     msg: "not implemented"
+    - name: Configure passwordless sudo.
+      ansible.builtin.lineinfile:
+        path: "/etc/sudoers.d/{{ ansible_user_id }}"
+        create: true
+        line: "{{ ansible_user_id }} ALL=(ALL) NOPASSWD: ALL"
+        mode: '0640'
+        validate: '/usr/sbin/visudo -cf %s'
+      become: true
 
     # - name: Managed Software Center installs.
     #   ansible.builtin.import_role:
@@ -30,6 +34,11 @@
       register: homebrew_check
       changed_when: false
       failed_when: false
+
+    - name: Message if Homebrew installation skipped.
+      debug:
+        msg: "Homebrew installation already exists.  Skipping install."
+      when: homebrew_check.rc == 0
 
     - name: Homebrew installation. 
       # NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -86,15 +95,39 @@
 
       when: homebrew_check.rc != 0
 
-    # - name: Run Homebrew bundle.
+    - name: Run Homebrew bundle.
+      debug: 
+        msg: "not implemented"
     #   ansible.builtin.command:
     #     cmd: brew bundle --global
     #   args:
     #     executable: /bin/bash
 
-    # - name: Install OMZ.
-    #   debug:
-    #     msg: "not implemented"
+    - name: Message if OMZ installation skipped.
+      debug:
+        msg: "OMS installation already exists.  Skipping install."
+      when: lookup('ansible.builtin.env', 'ZSH') | length > 0
+
+    - name: Install OMZ.
+      block:
+        - name: Fetch OMZ installer.
+          ansible.builtin.uri:
+            url: https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
+            return_content: true
+          register: omz_installer
+
+        - name: Run OMZ installer.
+          ansible.builtin.shell: |
+            RUNZSH=no;
+            CHSH=no;
+            {{ omz_installer.content }}
+          args:
+            executable: /bin/sh
+          register: omz_installation_output
+
+        - debug: msg="{{ omz_installation_output.stdout }}"
+
+      when: lookup('ansible.builtin.env', 'ZSH') | length == 0
 
     # - name: Configure OMZ custom and theme.
     #   debug:
