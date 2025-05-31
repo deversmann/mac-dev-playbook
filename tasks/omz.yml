@@ -1,0 +1,48 @@
+# code: language=ansible
+---
+- name: Message if OMZ installation skipped.
+  debug:
+    msg: "OMZ installation already exists.  Skipping install."
+  when: lookup('ansible.builtin.env', 'ZSH') | length > 0
+
+- name: Install OMZ.
+  block:
+    - name: Fetch OMZ installer.
+      ansible.builtin.uri:
+        url: https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
+        return_content: true
+      register: omz_installer
+
+    - name: Run OMZ installer.
+      ansible.builtin.shell: |
+        RUNZSH=no;
+        CHSH=no;
+        {{ omz_installer.content }}
+      args:
+        executable: /bin/sh
+      register: omz_installation_output
+
+  when: lookup('ansible.builtin.env', 'ZSH') | length == 0
+
+- name: Configure zsh theme.
+  ansible.builtin.lineinfile:
+    path: "~/.zshrc"
+    regexp: '^ZSH_THEME=".*"$'
+    line: "ZSH_THEME={{ zsh_theme }}"
+  when: zsh_theme is defined and zsh_theme | length > 0
+
+- name: Configure zsh custom.
+  ansible.builtin.lineinfile:
+    path: "~/.zshrc"
+    regexp: '^(# )?ZSH_CUSTOM=.*$'
+    line: "ZSH_CUSTOM={{ zsh_custom }}"
+  when: zsh_custom is defined and zsh_custom | length > 0
+
+- name: Configure zsh plugins.
+  ansible.builtin.lineinfile:
+    path: "~/.zshrc"
+    regexp: '^plugins=.*$'
+    line: "plugins=({{ zsh_plugins }})"
+  when: zsh_plugins is defined and zsh_plugins | length > 0
+
+...

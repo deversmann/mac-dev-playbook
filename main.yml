@@ -4,9 +4,12 @@
   hosts: all
 
   vars:
+    configure_homebrew: true
     run_brew_bundle: false
+
     run_msc_installs: true
-    
+
+    configure_omz: true
     zsh_custom: "~/.oh-my-zsh-custom"
     zsh_theme: "dje"
     zsh_plugins: "git git-prompt virtualenv"
@@ -37,121 +40,12 @@
         name: deversmann.msc
       when: run_msc_installs
 
-    - name: Check for Homebrew in path.
-      ansible.builtin.command: "which brew"
-      register: homebrew_check
-      changed_when: false
-      failed_when: false
+    - ansible.builtin.import_tasks: tasks/homebrew.yml
+      when: configure_homebrew
+      tags: ['homebrew']
 
-    - name: Message if Homebrew installation skipped.
-      debug:
-        msg: "Homebrew installation already exists.  Skipping install."
-      when: homebrew_check.rc == 0
-
-    - name: Homebrew installation. 
-      block:
-        - name: Fetch Homebrew installer.
-          ansible.builtin.uri:
-            url: https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh
-            return_content: true
-          register: homebrew_installer
-
-        - name: Run Homebrew installer.
-          ansible.builtin.shell: |
-            NONINTERACTIVE=1
-            {{ homebrew_installer.content }}
-          args:
-            executable: /bin/bash
-          register: homebrew_installation_output
-
-        - name: Check for Homebrew prefix in /opt/homebrew
-          ansible.builtin.set_fact:
-            homebrew_prefix: "/opt/homebrew"
-          when: '"/opt/homebrew/bin/brew" in homebrew_installation_output.stdout' 
-
-        - name: Check for Homebrew prefix in /usr/local
-          ansible.builtin.set_fact:
-            homebrew_prefix: "/usr/local"
-          when: '"/usr/local/bin/brew" in homebrew_installation_output.stdout'
-
-        - name: Check for Homebrew prefix in /home/linuxbrew/.linuxbrew
-          ansible.builtin.set_fact:
-            homebrew_prefix: "/home/linuxbrew/.linuxbrew"
-          when: '"/home/linuxbrew/.linuxbrew/bin/brew" in homebrew_installation_output.stdout'
-
-        - name: Check that we found the installation.
-          assert:
-            that: 'homebrew_prefix is defined'
-            fail_msg: "Homebrew not installed or installed to unknown location."
-            success_msg: "Homebrew installation found at HOMEBREW_PREFIX={{ homebrew_prefix }}"
-
-        - name: Check for Homebrew in path.
-          ansible.builtin.command: "which brew"
-          register: homebrew_check_2
-          changed_when: false
-          failed_when: false
-
-        - name: Add Homebrew to .zprofile if 'brew' not already in path
-          ansible.builtin.lineinfile:
-            path: "~/.zprofile"
-            create: true
-            mode: '0644'
-            regexp: "^eval \\$\\(.*/bin/brew shellenv\\)$"
-            line: 'eval "$({{ homebrew_prefix }}/bin/brew shellenv)"'
-          when: homebrew_check_2.rc != 0
-
-      when: homebrew_check.rc != 0
-
-    - name: Run Homebrew bundle.
-      ansible.builtin.command:
-        cmd: brew bundle --global
-      args:
-        executable: /bin/bash
-      when: run_brew_bundle
-
-    - name: Message if OMZ installation skipped.
-      debug:
-        msg: "OMZ installation already exists.  Skipping install."
-      when: lookup('ansible.builtin.env', 'ZSH') | length > 0
-
-    - name: Install OMZ.
-      block:
-        - name: Fetch OMZ installer.
-          ansible.builtin.uri:
-            url: https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
-            return_content: true
-          register: omz_installer
-
-        - name: Run OMZ installer.
-          ansible.builtin.shell: |
-            RUNZSH=no;
-            CHSH=no;
-            {{ omz_installer.content }}
-          args:
-            executable: /bin/sh
-          register: omz_installation_output
-
-      when: lookup('ansible.builtin.env', 'ZSH') | length == 0
-
-    - name: Configure zsh theme.
-      ansible.builtin.lineinfile:
-        path: "~/.zshrc"
-        regexp: '^ZSH_THEME=".*"$'
-        line: "ZSH_THEME={{ zsh_theme }}"
-      when: zsh_theme is defined and zsh_theme | length > 0
-
-    - name: Configure zsh custom.
-      ansible.builtin.lineinfile:
-        path: "~/.zshrc"
-        regexp: '^(# )?ZSH_CUSTOM=.*$'
-        line: "ZSH_CUSTOM={{ zsh_custom }}"
-      when: zsh_custom is defined and zsh_custom | length > 0
-
-    - name: Configure zsh plugins.
-      ansible.builtin.lineinfile:
-        path: "~/.zshrc"
-        regexp: '^plugins=.*$'
-        line: "plugins=({{ zsh_plugins }})"
-      when: zsh_plugins is defined and zsh_plugins | length > 0
+    - ansible.builtin.import_tasks: tasks/omz.yml
+      when: configure_omz
+      tags: ['omz']
 
 ...

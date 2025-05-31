@@ -1,0 +1,75 @@
+# code: language=ansible
+---
+- name: Check for Homebrew in path.
+  ansible.builtin.command: "which brew"
+  register: homebrew_check
+  changed_when: false
+  failed_when: false
+
+- name: Message if Homebrew installation skipped.
+  debug:
+    msg: "Homebrew installation already exists.  Skipping install."
+  when: homebrew_check.rc == 0
+
+- name: Homebrew installation. 
+  block:
+    - name: Fetch Homebrew installer.
+      ansible.builtin.uri:
+        url: https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh
+        return_content: true
+      register: homebrew_installer
+
+    - name: Run Homebrew installer.
+      ansible.builtin.shell: |
+        NONINTERACTIVE=1
+        {{ homebrew_installer.content }}
+      args:
+        executable: /bin/bash
+      register: homebrew_installation_output
+
+    - name: Check for Homebrew prefix in /opt/homebrew
+      ansible.builtin.set_fact:
+        homebrew_prefix: "/opt/homebrew"
+      when: '"/opt/homebrew/bin/brew" in homebrew_installation_output.stdout' 
+
+    - name: Check for Homebrew prefix in /usr/local
+      ansible.builtin.set_fact:
+        homebrew_prefix: "/usr/local"
+      when: '"/usr/local/bin/brew" in homebrew_installation_output.stdout'
+
+    - name: Check for Homebrew prefix in /home/linuxbrew/.linuxbrew
+      ansible.builtin.set_fact:
+        homebrew_prefix: "/home/linuxbrew/.linuxbrew"
+      when: '"/home/linuxbrew/.linuxbrew/bin/brew" in homebrew_installation_output.stdout'
+
+    - name: Check that we found the installation.
+      assert:
+        that: 'homebrew_prefix is defined'
+        fail_msg: "Homebrew not installed or installed to unknown location."
+        success_msg: "Homebrew installation found at HOMEBREW_PREFIX={{ homebrew_prefix }}"
+
+    - name: Check for Homebrew in path.
+      ansible.builtin.command: "which brew"
+      register: homebrew_check_2
+      changed_when: false
+      failed_when: false
+
+    - name: Add Homebrew to .zprofile if 'brew' not already in path
+      ansible.builtin.lineinfile:
+        path: "~/.zprofile"
+        create: true
+        mode: '0644'
+        regexp: "^eval \\$\\(.*/bin/brew shellenv\\)$"
+        line: 'eval "$({{ homebrew_prefix }}/bin/brew shellenv)"'
+      when: homebrew_check_2.rc != 0
+
+  when: homebrew_check.rc != 0
+
+- name: Run Homebrew bundle.
+  ansible.builtin.command:
+    cmd: brew bundle --global
+  args:
+    executable: /bin/bash
+  when: run_brew_bundle
+
+...
