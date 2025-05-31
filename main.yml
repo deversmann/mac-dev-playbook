@@ -51,17 +51,17 @@
         - name: Check for Homebrew prefix in /opt/homebrew
           ansible.builtin.set_fact:
             homebrew_prefix: "/opt/homebrew"
-          when: homebrew_installation_output.stdout contains "/opt/homebrew/brew/bin"
+          when: '"/opt/homebrew/brew/bin" in homebrew_installation_output.stdout' 
 
         - name: Check for Homebrew prefix in /usr/local
           ansible.builtin.set_fact:
             homebrew_prefix: "/usr/local"
-          when: homebrew_installation_output.stdout contains "/usr/local/brew/bin"
+          when: '"/usr/local/brew/bin" in homebrew_installation_output.stdout'
 
         - name: Check for Homebrew prefix in /home/linuxbrew/.linuxbrew
           ansible.builtin.set_fact:
             homebrew_prefix: "/home/linuxbrew/.linuxbrew"
-          when: homebrew_installation_output.stdout contains "/home/linuxbrew/.linuxbrew/brew/bin"
+          when: '"/home/linuxbrew/.linuxbrew/brew/bin" in homebrew_installation_output.stdout'
           
         - name: Debug
           debug:
