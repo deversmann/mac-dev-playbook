@@ -17,6 +17,10 @@
 
 
   tasks:
+    # - name: Configure passwordless sudo.
+    #   debug:
+    #     msg: "not implemented"
+
     # - name: Managed Software Center installs.
     #   ansible.builtin.import_role:
     #     name: deversmann.msc
@@ -25,6 +29,7 @@
       ansible.builtin.command: "which brew"
       register: homebrew_check
       changed_when: false
+      failed_when: false
 
     - name: Homebrew installation. 
       # NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -41,6 +46,11 @@
             {{ homebrew_installer }}
           args:
             executable: /bin/bash
+          register: homebrew_installation_output
+
+        - name: Debug
+          debug:
+            msg: {{ homebrew_installation_output }}
 
       when: homebrew_check.rc != 0
 
