@@ -43,14 +43,29 @@
         - name: Run Homebrew installer.
           ansible.builtin.shell: |
             NONINTERACTIVE=1
-            {{ homebrew_installer }}
+            {{ homebrew_installer.content }}
           args:
             executable: /bin/bash
           register: homebrew_installation_output
 
+        - name: Check for Homebrew prefix in /opt/homebrew
+          ansible.builtin.set_fact:
+            homebrew_prefix: "/opt/homebrew"
+          when: homebrew_installation_output.stdout contains "/opt/homebrew/brew/bin"
+
+        - name: Check for Homebrew prefix in /usr/local
+          ansible.builtin.set_fact:
+            homebrew_prefix: "/usr/local"
+          when: homebrew_installation_output.stdout contains "/usr/local/brew/bin"
+
+        - name: Check for Homebrew prefix in /home/linuxbrew/.linuxbrew
+          ansible.builtin.set_fact:
+            homebrew_prefix: "/home/linuxbrew/.linuxbrew"
+          when: homebrew_installation_output.stdout contains "/home/linuxbrew/.linuxbrew/brew/bin"
+          
         - name: Debug
           debug:
-            msg: {{ homebrew_installation_output }}
+            msg: "HOMEBREW_PREFIX={{ homebrew_prefix }}"
 
       when: homebrew_check.rc != 0
 
