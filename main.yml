@@ -1,0 +1,61 @@
+# code: language=ansible
+---
+name: Configure host.
+hosts: all
+
+vars:
+  msc_installs:
+    - Cyberduck
+    - GIMP
+    - GitHubDesktop
+    - GoogleDrive
+    - GrandPerspective
+    - Slack
+    - TheUnarchiver
+    - WindowsApp
+    - Zoom.us
+
+
+tasks:
+  # - name: Managed Software Center installs.
+  #   ansible.builtin.import_role:
+  #     name: deversmann.msc
+
+  - name: Check for Homebrew installation.
+    ansible.builtin.command: "which brew"
+    register: homebrew_check
+    changed_when: false
+
+  - name: Homebrew installation. 
+    # NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    block:
+      - name: Fetch Homebrew installer.
+        ansible.builtin.uri:
+          url: https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh
+          return_content: true
+        register: homebrew_installer
+
+      - name: Run Homebrew installer.
+        ansible.builtin.shell: |
+          NONINTERACTIVE=1
+          {{ homebrew_installer }}
+        args:
+          executable: /bin/bash
+
+    when: homebrew_check.rc != 0
+
+  # - name: Run Homebrew bundle.
+  #   ansible.builtin.command:
+  #     cmd: brew bundle --global
+  #   args:
+  #     executable: /bin/bash
+
+  # - name: Install OMZ.
+  #   debug:
+  #     msg: "not implemented"
+
+  # - name: Configure OMZ custom and theme.
+  #   debug:
+  #     msg: "not implemented"
+
+...

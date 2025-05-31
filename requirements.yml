@@ -1,0 +1,9 @@
+---
+
+roles:
+  - name: deversmann.msc
+
+collections:
+  - name: community.general
+
+...
