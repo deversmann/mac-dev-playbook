@@ -1,7 +1,7 @@
 # code: language=ansible
 ---
 - name: Check for Homebrew in path.
-  ansible.builtin.command: "which brew"
+  ansible.builtin.command: "command -v brew"
   register: homebrew_check
   changed_when: false
   failed_when: false
