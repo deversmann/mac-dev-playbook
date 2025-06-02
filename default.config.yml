@@ -1,0 +1,24 @@
+# code: language=ansible
+---
+
+run_msc_installs: true
+configure_homebrew: true
+run_brew_bundle: false
+configure_omz: true
+
+zsh_custom: "~/.oh-my-zsh-custom"
+zsh_theme: "dje"
+zsh_plugins: "git git-prompt virtualenv"
+
+msc_installs:
+  - Cyberduck
+  - GIMP
+  - GitHubDesktop
+  - GoogleDrive
+  - GrandPerspective
+  - Slack
+  - TheUnarchiver
+  - WindowsApp
+  - Zoom.us
+
+...
