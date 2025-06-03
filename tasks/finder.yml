@@ -1,0 +1,13 @@
+# code: language=ansible
+---
+# general:
+  # check hard disks and connected servers
+  # new finder window: homedir
+# sidebar:
+  # remove airdrop and recents
+  # add homedir
+  # add development (if it exists)
+  # locations?
+  # hide tags
+# view as list ?
+...

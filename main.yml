@@ -38,4 +38,24 @@
       when: configure_omz
       tags: ['omz']
 
+    - ansible.builtin.import_tasks: tasks/finder.yml
+      when: configure_finder
+      tags: ['finder']
+
+    - ansible.builtin.import_tasks: tasks/terminal.yml
+      when: configure_terminal
+      tags: ['terminal']
+
+    - ansible.builtin.import_tasks: tasks/streamdeck.yml
+      when: configure_streamdeck
+      tags: ['streamdeck']
+
+    - ansible.builtin.import_tasks: tasks/files.yml
+      when: configure_files
+      tags: ['files']
+      # configure dropbox?
+
+    # checkout git
+
+
 ...
