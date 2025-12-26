@@ -1,0 +1,45 @@
+# code: language=ansible
+---
+
+- name: Ensure .zsh directory exists
+  ansible.builtin.file:
+    path: "~/.zsh"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0755'
+
+- name: Clone git-prompt.zsh if it doesn't already exist
+  ansible.builtin.git:
+    repo: https://github.com/woefe/git-prompt.zsh
+    dest: "~/.zsh/git-prompt.zsh"
+  creates: "~/.zsh/git-prompt.zsh"
+
+- name: Add git-prompt config to .zshrc
+  ansible.builtin.blockinfile:
+    path: "~/.zshrc"
+    append_newline: true
+    prepend_newline: true
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - git-prompt.zsh config"
+    block: |
+      ### prompt customization https://github.com/woefe/git-prompt.zsh
+      source ~/.zsh/git-prompt.zsh/git-prompt.zsh
+      source ~/.zsh/git-prompt.zsh/examples/multiline.zsh
+
+- name: Clone zsh-syntax-highlighting.zsh if it doesn't already exist
+  ansible.builtin.git:
+    repo: https://github.com/zsh-users/zsh-syntax-highlighting
+    dest: "~/.zsh/zsh-syntax-highlighting"
+  creates: "~/.zsh/zsh-syntax-highlighting"
+
+- name: Add zsh-syntax-highlighting.zsh config to .zshrc
+  ansible.builtin.blockinfile:
+    path: "~/.zshrc"
+    append_newline: true
+    prepend_newline: true
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - zsh-syntax-highlighting config"
+    block: |
+      ### syntax highlighting https://ianyepan.github.io/posts/moving-away-from-ohmyzsh/
+      source /Users/deversma/.zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+
+...

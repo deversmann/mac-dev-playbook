@@ -1,5 +1,9 @@
 # code: language=ansible
 ---
+
+- name: NOT YET IMPLEMENTED
+  debug: msg="NOT YET IMPLEMENTED"
+
 # load profile(s)
 # set default profile
 

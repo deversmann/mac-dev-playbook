@@ -1,0 +1,20 @@
+# code: language=ansible
+---
+- name: Check if .pyenv already exists
+  ansible.builtin.stat:
+    path: "~/.pyenv"
+  register: stat_out
+
+- name: Clone pyenv to .pyenv if it doesn't already exist
+  when: not stat_out.stat.exists
+  ansible.builtin.git:
+    repo: https://github.com/pyenv/pyenv
+    dest: "~/.pyenv"
+
+## TODO lines in .zshrc file
+
+## TODO pyenv install [version?], pyenv global [version?]
+
+## TODO pip install passlib, pip install jmespath
+
+...
